@@ -2,3 +2,4 @@ tensorboard_logger
 tensorflow
 torch
 torchvision
+timm

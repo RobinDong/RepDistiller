@@ -61,6 +61,8 @@ def parse_option():
                         choices=['resnet8', 'resnet14', 'resnet20', 'resnet32', 'resnet44', 'resnet56', 'resnet110',
                                  'resnet8x4', 'resnet32x4', 'wrn_16_1', 'wrn_16_2', 'wrn_40_1', 'wrn_40_2',
                                  'vgg8', 'vgg11', 'vgg13', 'vgg16', 'vgg19', 'ResNet50',
+                                 'convnextv2_atto', 'convnextv2_femto', 'convnextv2_pico',
+                                 'convnextv2_nano', 'convnextv2_tiny', 'convnextv2_small',
                                  'MobileNetV2', 'ShuffleV1', 'ShuffleV2'])
     parser.add_argument('--path_t', type=str, default=None, help='teacher model snapshot')
 
