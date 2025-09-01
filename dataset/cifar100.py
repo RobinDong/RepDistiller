@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import socket
 import numpy as np
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from torchvision import datasets, transforms
 from PIL import Image
 
@@ -72,6 +72,9 @@ def get_cifar100_dataloaders(batch_size=128, num_workers=8, is_instance=False):
                                       download=True,
                                       train=True,
                                       transform=train_transform)
+
+    repeat_factor = 8
+    train_set = ConcatDataset([train_set] * repeat_factor)
     train_loader = DataLoader(train_set,
                               batch_size=batch_size,
                               shuffle=True,
@@ -189,6 +192,8 @@ def get_cifar100_dataloaders_sample(batch_size=128, num_workers=8, k=4096, mode=
                                        is_sample=is_sample,
                                        percent=percent)
     n_data = len(train_set)
+    repeat_factor = 4
+    train_set = ConcatDataset([train_set] * repeat_factor)
     train_loader = DataLoader(train_set,
                               batch_size=batch_size,
                               shuffle=True,
