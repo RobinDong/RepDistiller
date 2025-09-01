@@ -13,8 +13,10 @@ class ConvNeXtV2Wrapper(nn.Module):
         super().__init__()
         self.backbone = timm.create_model(
             f"convnextv2_{subname}.fcmae_ft_in1k",
-            num_classes = num_classes
+            num_classes = num_classes,
+            patch_size = 1,
         )
+        self.backbone.stem[0].kernel_size = 4
 
     def forward(self, inp, is_feat=False, preact=False):
         features = []
