@@ -7,7 +7,7 @@ import torch
 from .util import AverageMeter, accuracy
 
 
-def train_vanilla(epoch, train_loader, model, criterion, optimizer, opt):
+def train_vanilla(epoch, train_loader, model, criterion, optimizer, opt, mixup_fn):
     """vanilla training"""
     model.train()
 
@@ -26,9 +26,11 @@ def train_vanilla(epoch, train_loader, model, criterion, optimizer, opt):
             input = input.cuda()
             target = target.cuda()
 
+        input, mtarget = mixup_fn(input, target)
+
         # ===================forward=====================
         output = model(input)
-        loss = criterion(output, target)
+        loss = criterion(output, mtarget)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), input.size(0))
