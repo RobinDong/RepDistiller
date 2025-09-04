@@ -137,6 +137,7 @@ def load_teacher(model_path, n_cls):
     print('==> loading teacher model')
     model_t = get_teacher_name(model_path)
     model = model_dict[model_t](num_classes=n_cls)
+    model = torch.compile(model)
     model.load_state_dict(torch.load(model_path, weights_only=False)['model'])
     print('==> done')
     return model

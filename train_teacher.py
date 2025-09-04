@@ -18,6 +18,8 @@ from dataset.cifar100 import get_cifar100_dataloaders
 from helper.util import adjust_learning_rate, accuracy, AverageMeter
 from helper.loops import train_vanilla as train, validate
 
+from timm.data import Mixup
+
 
 def parse_option():
 
@@ -116,6 +118,13 @@ def main():
     # tensorboard
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
 
+    # mixup
+    mixup_args = dict(
+        mixup_alpha=0.8, cutmix_alpha=1.0, cutmix_minmax=None,
+        prob=1.0, switch_prob=0.5, mode='batch',
+        label_smoothing=0.1, num_classes=100)
+    mixup_fn = Mixup(**mixup_args)
+
     # routine
     for epoch in range(1, opt.epochs + 1):
 
@@ -123,7 +132,7 @@ def main():
         print("==> training...")
 
         time1 = time.time()
-        train_acc, train_loss = train(epoch, train_loader, model, criterion, optimizer, opt)
+        train_acc, train_loss = train(epoch, train_loader, model, criterion, optimizer, opt, mixup_fn)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 
