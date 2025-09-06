@@ -24,12 +24,26 @@ from dataset.cifar100 import get_cifar100_dataloaders, get_cifar100_dataloaders_
 
 from helper.util import adjust_learning_rate
 
-from distiller_zoo import DistillKL, HintLoss, Attention, Similarity, Correlation, VIDLoss, RKDLoss
+from distiller_zoo import DistillKL, HintLoss, Attention, Similarity, Correlation, VIDLoss, RKDLoss, AFD
 from distiller_zoo import PKT, ABLoss, FactorTransfer, KDSVD, FSP, NSTLoss
 from crd.criterion import CRDLoss
 
 from helper.loops import train_distill as train, validate
 from helper.pretrain import init
+
+from timm.data import Mixup
+
+
+def unique_shape(s_shapes):
+    n_s = []
+    unique_shapes = []
+    n = -1
+    for s_shape in s_shapes:
+        if s_shape not in unique_shapes:
+            unique_shapes.append(s_shape)
+            n += 1
+        n_s.append(n)
+    return n_s, unique_shapes
 
 
 def parse_option():
@@ -69,7 +83,7 @@ def parse_option():
     # distillation
     parser.add_argument('--distill', type=str, default='kd', choices=['kd', 'hint', 'attention', 'similarity',
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
-                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst'])
+                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'afd'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
@@ -150,6 +164,13 @@ def main():
 
     # tensorboard logger
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
+
+    # mixup
+    mixup_args = dict(
+        mixup_alpha=0.8, cutmix_alpha=1.0, cutmix_minmax=None,
+        prob=1.0, switch_prob=0.5, mode='batch',
+        label_smoothing=0.1, num_classes=100)
+    mixup_fn = Mixup(**mixup_args)
 
     # dataloader
     if opt.dataset == 'cifar100':
@@ -264,6 +285,14 @@ def main():
         init(model_s, model_t, init_trainable_list, criterion_kd, train_loader, logger, opt)
         # classification training
         pass
+    elif opt.distill == 'afd':
+        opt.s_shapes = [s.shape for s in feat_s[-5:-1]]
+        opt.t_shapes = [t.shape for t in feat_t[-5:-1]]
+        opt.qk_dim = 128
+        opt.guide_layers = [0, 1, 2, 3]
+        opt.hint_layers = [0, 1, 2, 3]
+        opt.n_t, opt.unique_t_shapes = unique_shape(opt.t_shapes)
+        criterion_kd = AFD(opt)
     else:
         raise NotImplementedError(opt.distill)
 
@@ -297,7 +326,7 @@ def main():
         print("==> training...")
 
         time1 = time.time()
-        train_acc, train_loss = train(epoch, train_loader, module_list, criterion_list, optimizer, opt)
+        train_acc, train_loss = train(epoch, train_loader, module_list, criterion_list, optimizer, opt, mixup_fn)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 

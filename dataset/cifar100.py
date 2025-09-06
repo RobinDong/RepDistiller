@@ -192,7 +192,7 @@ def get_cifar100_dataloaders_sample(batch_size=128, num_workers=8, k=4096, mode=
                                        is_sample=is_sample,
                                        percent=percent)
     n_data = len(train_set)
-    repeat_factor = 4
+    repeat_factor = 8
     train_set = ConcatDataset([train_set] * repeat_factor)
     train_loader = DataLoader(train_set,
                               batch_size=batch_size,

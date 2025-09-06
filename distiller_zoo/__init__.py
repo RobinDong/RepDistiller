@@ -1,5 +1,6 @@
 from .AB import ABLoss
 from .AT import Attention
+from .AFD import AFD
 from .CC import Correlation
 from .FitNet import HintLoss
 from .FSP import FSP
