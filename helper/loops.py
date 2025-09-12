@@ -178,6 +178,10 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             factor_s = module_list[1](feat_s[-2])
             factor_t = module_list[2](feat_t[-2], is_factor=True)
             loss_kd = criterion_kd(factor_s, factor_t)
+        elif opt.distill == 'afd':
+            g_s = feat_s[-5:-1]
+            g_t = feat_t[-5:-1]
+            loss_kd = criterion_kd(g_s, g_t)
         else:
             raise NotImplementedError(opt.distill)
 

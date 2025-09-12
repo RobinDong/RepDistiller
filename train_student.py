@@ -24,12 +24,24 @@ from dataset.cifar100 import get_cifar100_dataloaders, get_cifar100_dataloaders_
 
 from helper.util import adjust_learning_rate
 
-from distiller_zoo import DistillKL, HintLoss, Attention, Similarity, Correlation, VIDLoss, RKDLoss
+from distiller_zoo import DistillKL, HintLoss, Attention, Similarity, Correlation, VIDLoss, RKDLoss, AFD
 from distiller_zoo import PKT, ABLoss, FactorTransfer, KDSVD, FSP, NSTLoss
 from crd.criterion import CRDLoss
 
 from helper.loops import train_distill as train, validate
 from helper.pretrain import init
+
+
+def unique_shape(s_shapes):
+    n_s = []
+    unique_shapes = []
+    n = -1
+    for s_shape in s_shapes:
+        if s_shape not in unique_shapes:
+            unique_shapes.append(s_shape)
+            n += 1
+        n_s.append(n)
+    return n_s, unique_shapes
 
 
 def parse_option():
@@ -67,7 +79,7 @@ def parse_option():
     # distillation
     parser.add_argument('--distill', type=str, default='kd', choices=['kd', 'hint', 'attention', 'similarity',
                                                                       'correlation', 'vid', 'crd', 'kdsvd', 'fsp',
-                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst'])
+                                                                      'rkd', 'pkt', 'abound', 'factor', 'nst', 'afd'])
     parser.add_argument('--trial', type=str, default='1', help='trial id')
 
     parser.add_argument('-r', '--gamma', type=float, default=1, help='weight for classification')
@@ -135,7 +147,7 @@ def load_teacher(model_path, n_cls):
     print('==> loading teacher model')
     model_t = get_teacher_name(model_path)
     model = model_dict[model_t](num_classes=n_cls)
-    model.load_state_dict(torch.load(model_path, weights_only=False)['model'])
+    model.load_state_dict(torch.load(model_path, weights_only=False))
     print('==> done')
     return model
 
@@ -261,6 +273,14 @@ def main():
         init(model_s, model_t, init_trainable_list, criterion_kd, train_loader, logger, opt)
         # classification training
         pass
+    elif opt.distill == 'afd':
+        opt.s_shapes = [s.shape for s in feat_s[-5:-1]]
+        opt.t_shapes = [t.shape for t in feat_t[-5:-1]]
+        opt.qk_dim = 128
+        opt.guide_layers = [0, 1, 2, 3]
+        opt.hint_layers = [0, 1, 2, 3]
+        opt.n_t, opt.unique_t_shapes = unique_shape(opt.t_shapes)
+        criterion_kd = AFD(opt)
     else:
         raise NotImplementedError(opt.distill)
 
