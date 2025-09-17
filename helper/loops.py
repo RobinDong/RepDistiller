@@ -183,11 +183,43 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
         elif opt.distill == 'afd':
             g_s = feat_s[-5:-1]
             g_t = feat_t[-5:-1]
+            
+            # Progressive distillation scheduling
+            if hasattr(opt, 'progressive_afd') and opt.progressive_afd:
+                # Gradually increase attention layers during training
+                total_epochs = opt.epochs
+                current_progress = epoch / total_epochs
+                
+                # Start with fewer layers, gradually include more
+                if current_progress < 0.3:
+                    g_s = g_s[-2:]  # Use only last 2 layers initially
+                    g_t = g_t[-2:]
+                elif current_progress < 0.6:
+                    g_s = g_s[-3:]  # Use last 3 layers
+                    g_t = g_t[-3:]
+                # Full layers for final 40% of training
+            
             loss_kd = criterion_kd(g_s, g_t)
         else:
             raise NotImplementedError(opt.distill)
 
-        loss = opt.gamma * loss_cls + opt.alpha * loss_div + opt.beta * loss_kd
+        # Adaptive loss weighting for AFD
+        if opt.distill == 'afd' and hasattr(opt, 'adaptive_weighting') and opt.adaptive_weighting:
+            # Gradually increase distillation weight during training
+            total_epochs = opt.epochs
+            current_progress = epoch / total_epochs
+            
+            # Warm-up phase: focus more on classification
+            if current_progress < 0.2:
+                beta_adaptive = opt.beta * 0.5
+            elif current_progress < 0.5:
+                beta_adaptive = opt.beta * (0.5 + 0.5 * (current_progress - 0.2) / 0.3)
+            else:
+                beta_adaptive = opt.beta
+                
+            loss = opt.gamma * loss_cls + opt.alpha * loss_div + beta_adaptive * loss_kd
+        else:
+            loss = opt.gamma * loss_cls + opt.alpha * loss_div + opt.beta * loss_kd
 
         acc1, acc5 = accuracy(logit_s, target, topk=(1, 5))
         losses.update(loss.item(), input.size(0))
