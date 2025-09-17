@@ -4,6 +4,7 @@ from .wrn import wrn_16_1, wrn_16_2, wrn_40_1, wrn_40_2
 from .vgg import vgg19_bn, vgg16_bn, vgg13_bn, vgg11_bn, vgg8_bn
 from .mobilenetv2 import mobile_half
 from .convnextv2 import convnextv2_atto, convnextv2_femto, convnextv2_pico, convnextv2_nano, convnextv2_tiny, convnextv2_small
+from .poolformerv2 import poolformerv2_s12, poolformerv2_s24, poolformerv2_s36
 from .ShuffleNetv1 import ShuffleV1
 from .ShuffleNetv2 import ShuffleV2
 
@@ -33,6 +34,9 @@ model_dict = {
     'convnextv2_nano': convnextv2_nano,
     'convnextv2_tiny': convnextv2_tiny,
     'convnextv2_small': convnextv2_small,
+    'poolformerv2_s12': poolformerv2_s12,
+    'poolformerv2_s24': poolformerv2_s24,
+    'poolformerv2_s36': poolformerv2_s36,
     'MobileNetV2': mobile_half,
     'ShuffleV1': ShuffleV1,
     'ShuffleV2': ShuffleV2,

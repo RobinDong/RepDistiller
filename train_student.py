@@ -77,6 +77,7 @@ def parse_option():
                                  'vgg8', 'vgg11', 'vgg13', 'vgg16', 'vgg19', 'ResNet50',
                                  'convnextv2_atto', 'convnextv2_femto', 'convnextv2_pico',
                                  'convnextv2_nano', 'convnextv2_tiny', 'convnextv2_small',
+                                 'poolformerv2_s12', 'poolformerv2_s24', 'poolformerv2_s36',
                                  'MobileNetV2', 'ShuffleV1', 'ShuffleV2'])
     parser.add_argument('--path_t', type=str, default=None, help='teacher model snapshot')
 
@@ -151,8 +152,8 @@ def load_teacher(model_path, n_cls):
     print('==> loading teacher model')
     model_t = get_teacher_name(model_path)
     model = model_dict[model_t](num_classes=n_cls)
+    model.load_state_dict(torch.load(model_path, weights_only=False))
     model = torch.compile(model)
-    model.load_state_dict(torch.load(model_path, weights_only=False)['model'])
     print('==> done')
     return model
 

@@ -19,18 +19,24 @@ class ConvNeXtV2Wrapper(nn.Module):
         self.backbone.stem[0].kernel_size = 4
 
     def forward(self, inp, is_feat=False, preact=False):
-        features = []
         x = self.backbone.stem(inp)
 
-        for index, stage in enumerate(self.backbone.stages):
-            x = stage(x)
-            features.append(x)
+        stages = self.backbone.stages
+        f0 = x
+        x = stages[0](x)
+        f1 = x
+        x = stages[1](x)
+        f2 = x
+        x = stages[2](x)
+        f3 = x
+        x = stages[3](x)
 
         out = self.backbone.norm_pre(x)
+        f4 = x
         out = self.backbone.forward_head(out)
 
         if is_feat:
-            return features, out
+            return [f0, f1, f2, f3, f4], out
         else:
             return out
 
