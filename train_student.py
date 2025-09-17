@@ -30,6 +30,7 @@ from crd.criterion import CRDLoss
 
 from helper.loops import train_distill as train, validate
 from helper.pretrain import init
+from timm.data import Mixup
 
 
 def unique_shape(s_shapes):
@@ -159,6 +160,13 @@ def main():
 
     # tensorboard logger
     logger = tb_logger.Logger(logdir=opt.tb_folder, flush_secs=2)
+
+    # mixup
+    mixup_args = dict(
+        mixup_alpha=0.8, cutmix_alpha=1.0, cutmix_minmax=None,
+        prob=1.0, switch_prob=0.5, mode='batch',
+        label_smoothing=0.1, num_classes=100)
+    mixup_fn = Mixup(**mixup_args)
 
     # dataloader
     if opt.dataset == 'cifar100':
@@ -314,7 +322,7 @@ def main():
         print("==> training...")
 
         time1 = time.time()
-        train_acc, train_loss = train(epoch, train_loader, module_list, criterion_list, optimizer, opt)
+        train_acc, train_loss = train(epoch, train_loader, module_list, criterion_list, optimizer, opt, mixup_fn)
         time2 = time.time()
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
 

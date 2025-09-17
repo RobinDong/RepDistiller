@@ -65,7 +65,7 @@ def train_vanilla(epoch, train_loader, model, criterion, optimizer, opt):
     return top1.avg, losses.avg
 
 
-def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt):
+def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, opt, mixup_fn):
     """One epoch distillation"""
     # set modules as train()
     for module in module_list:
@@ -107,6 +107,8 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             if opt.distill in ['crd']:
                 contrast_idx = contrast_idx.cuda()
 
+        input, mtarget = mixup_fn(input, target)
+
         # ===================forward=====================
         preact = False
         if opt.distill in ['abound']:
@@ -117,7 +119,7 @@ def train_distill(epoch, train_loader, module_list, criterion_list, optimizer, o
             feat_t = [f.detach() for f in feat_t]
 
         # cls + kl div
-        loss_cls = criterion_cls(logit_s, target)
+        loss_cls = criterion_cls(logit_s, mtarget)
         loss_div = criterion_div(logit_s, logit_t)
 
         # other kd beyond KL divergence
